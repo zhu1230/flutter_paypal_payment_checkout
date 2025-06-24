@@ -11,6 +11,10 @@ class PaypalCheckoutView extends StatefulWidget {
   final Widget? loadingIndicator;
   final List? transactions;
   final bool? sandboxMode;
+
+  final dynamic returnURL;
+
+  final dynamic cancelURL;
   const PaypalCheckoutView({
     Key? key,
     required this.onSuccess,
@@ -22,6 +26,8 @@ class PaypalCheckoutView extends StatefulWidget {
     this.sandboxMode = false,
     this.note = '',
     this.loadingIndicator,
+    this.returnURL = 'https://www.example.com/success',
+    this.cancelURL = 'https://www.example.com/cancel',
   }) : super(key: key);
 
   @override
@@ -41,9 +47,6 @@ class PaypalCheckoutViewState extends State<PaypalCheckoutView> {
   late PaypalServices services;
   int pressed = 0;
   double progress = 0;
-  final String returnURL =
-      'https://www.youtube.com/channel/UC9a1yj1xV2zeyiFPZ1gGYGw';
-  final String cancelURL = 'https://www.facebook.com/tharwat.samy.9';
 
   late InAppWebViewController webView;
 
@@ -53,7 +56,10 @@ class PaypalCheckoutViewState extends State<PaypalCheckoutView> {
       "payer": {"payment_method": "paypal"},
       "transactions": widget.transactions,
       "note_to_payer": widget.note,
-      "redirect_urls": {"return_url": returnURL, "cancel_url": cancelURL}
+      "redirect_urls": {
+        "return_url": widget.returnURL,
+        "cancel_url": widget.cancelURL,
+      },
     };
     return temp;
   }
@@ -101,9 +107,7 @@ class PaypalCheckoutViewState extends State<PaypalCheckoutView> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
-          title: const Text(
-            "Paypal Payment",
-          ),
+          title: const Text("Paypal Payment"),
         ),
         body: Stack(
           children: <Widget>[
@@ -111,11 +115,11 @@ class PaypalCheckoutViewState extends State<PaypalCheckoutView> {
               shouldOverrideUrlLoading: (controller, navigationAction) async {
                 final url = navigationAction.request.url;
 
-                if (url.toString().contains(returnURL)) {
+                if (url.toString().contains(widget.returnURL)) {
                   exceutePayment(url, context);
                   return NavigationActionPolicy.CANCEL;
                 }
-                if (url.toString().contains(cancelURL)) {
+                if (url.toString().contains(widget.cancelURL)) {
                   return NavigationActionPolicy.CANCEL;
                 } else {
                   return NavigationActionPolicy.ALLOW;
@@ -135,17 +139,15 @@ class PaypalCheckoutViewState extends State<PaypalCheckoutView> {
               },
               onProgressChanged:
                   (InAppWebViewController controller, int progress) {
-                setState(() {
-                  this.progress = progress / 100;
-                });
-              },
+                    setState(() {
+                      this.progress = progress / 100;
+                    });
+                  },
             ),
             progress < 1
                 ? SizedBox(
                     height: 3,
-                    child: LinearProgressIndicator(
-                      value: progress,
-                    ),
+                    child: LinearProgressIndicator(value: progress),
                   )
                 : const SizedBox(),
           ],
@@ -157,13 +159,11 @@ class PaypalCheckoutViewState extends State<PaypalCheckoutView> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
-          title: const Text(
-            "Paypal Payment",
-          ),
+          title: const Text("Paypal Payment"),
         ),
         body: Center(
-            child:
-                widget.loadingIndicator ?? const CircularProgressIndicator()),
+          child: widget.loadingIndicator ?? const CircularProgressIndicator(),
+        ),
       );
     }
   }
@@ -171,15 +171,13 @@ class PaypalCheckoutViewState extends State<PaypalCheckoutView> {
   void exceutePayment(Uri? url, BuildContext context) {
     final payerID = url!.queryParameters['PayerID'];
     if (payerID != null) {
-      services.executePayment(executeUrl, payerID, accessToken).then(
-        (id) {
-          if (id['error'] == false) {
-            widget.onSuccess(id);
-          } else {
-            widget.onError(id);
-          }
-        },
-      );
+      services.executePayment(executeUrl, payerID, accessToken).then((id) {
+        if (id['error'] == false) {
+          widget.onSuccess(id);
+        } else {
+          widget.onError(id);
+        }
+      });
     } else {
       widget.onError('Something went wront PayerID == null');
     }
