@@ -102,68 +102,53 @@ class PaypalCheckoutViewState extends State<PaypalCheckoutView> {
   @override
   Widget build(BuildContext context) {
     if (checkoutUrl != null) {
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          centerTitle: true,
-          title: const Text("Paypal Payment"),
-        ),
-        body: Stack(
-          children: <Widget>[
-            InAppWebView(
-              shouldOverrideUrlLoading: (controller, navigationAction) async {
-                final url = navigationAction.request.url;
+      return Stack(
+        children: <Widget>[
+          InAppWebView(
+            shouldOverrideUrlLoading: (controller, navigationAction) async {
+              final url = navigationAction.request.url;
 
-                if (url.toString().contains(widget.returnURL)) {
-                  exceutePayment(url, context);
-                  return NavigationActionPolicy.CANCEL;
-                }
-                if (url.toString().contains(widget.cancelURL)) {
-                  return NavigationActionPolicy.CANCEL;
-                } else {
-                  return NavigationActionPolicy.ALLOW;
-                }
-              },
-              initialUrlRequest: URLRequest(url: WebUri(checkoutUrl!)),
-              // initialOptions: InAppWebViewGroupOptions(
-              //   crossPlatform: InAppWebViewOptions(
-              //     useShouldOverrideUrlLoading: true,
-              //   ),
-              // ),
-              onWebViewCreated: (InAppWebViewController controller) {
-                webView = controller;
-              },
-              onCloseWindow: (InAppWebViewController controller) {
-                widget.onCancel();
-              },
-              onProgressChanged:
-                  (InAppWebViewController controller, int progress) {
-                    setState(() {
-                      this.progress = progress / 100;
-                    });
-                  },
-            ),
-            progress < 1
-                ? SizedBox(
-                    height: 3,
-                    child: LinearProgressIndicator(value: progress),
-                  )
-                : const SizedBox(),
-          ],
-        ),
+              if (url.toString().contains(widget.returnURL)) {
+                exceutePayment(url, context);
+                return NavigationActionPolicy.CANCEL;
+              }
+              if (url.toString().contains(widget.cancelURL)) {
+                return NavigationActionPolicy.CANCEL;
+              } else {
+                return NavigationActionPolicy.ALLOW;
+              }
+            },
+            initialUrlRequest: URLRequest(url: WebUri(checkoutUrl!)),
+            // initialOptions: InAppWebViewGroupOptions(
+            //   crossPlatform: InAppWebViewOptions(
+            //     useShouldOverrideUrlLoading: true,
+            //   ),
+            // ),
+            onWebViewCreated: (InAppWebViewController controller) {
+              webView = controller;
+            },
+            onCloseWindow: (InAppWebViewController controller) {
+              widget.onCancel();
+            },
+            onProgressChanged:
+                (InAppWebViewController controller, int progress) {
+              setState(() {
+                this.progress = progress / 100;
+              });
+            },
+          ),
+          progress < 1
+              ? SizedBox(
+                  height: 3,
+                  child: LinearProgressIndicator(value: progress),
+                )
+              : const SizedBox(),
+        ],
       );
+      // );
     } else {
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          centerTitle: true,
-          title: const Text("Paypal Payment"),
-        ),
-        body: Center(
-          child: widget.loadingIndicator ?? const CircularProgressIndicator(),
-        ),
+      return Center(
+        child: widget.loadingIndicator ?? const CircularProgressIndicator(),
       );
     }
   }
